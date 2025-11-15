@@ -40,12 +40,12 @@
       padding-left: 6px;
     }
     .grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 6px 8px;
-      align-items: center;
-      font-size: 14px;
-    }
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 6px 8px;
+  align-items: center;
+  font-size: 14px;
+　　}
     label {
       font-size: 13px;
     }
@@ -58,21 +58,21 @@
   border: 1px solid #d1d5db;
   font-size: 14px;
   background: #f9fafb;
-}
+　　}
     textarea {
       min-height: 60px;
       resize: vertical;
-    }
-    .row2 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-    }
-    .row3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
+   }
+  .row2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+　}
+  .row3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+　}
     .sub-title {
       font-weight: bold;
       margin: 6px 0 4px;
@@ -142,11 +142,13 @@
       margin-top: 6px;
       display: block;
     }
-    input[type="date"] {
+ input[type="date"] {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   -webkit-appearance: none;
-}
+　}
   </style>
 </head>
 <body>
