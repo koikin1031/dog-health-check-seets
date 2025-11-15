@@ -49,15 +49,16 @@
     label {
       font-size: 13px;
     }
-    input, textarea, select {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 6px 8px;
-      border-radius: 4px;
-      border: 1px solid #d1d5db;
-      font-size: 14px;
-      background: #f9fafb;
-    }
+  input, textarea, select {
+  width: 100%;
+  min-width: 0;          /* ← これを追加 */
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #f9fafb;
+}
     textarea {
       min-height: 60px;
       resize: vertical;
