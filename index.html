@@ -142,13 +142,19 @@
       margin-top: 6px;
       display: block;
     }
- input[type="date"] {
+input[type="date"] {
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+
+  /* 見た目を他の入力と完全に揃えるための指定 */
   -webkit-appearance: none;
-　}
+  appearance: none;
+  padding: 6px 8px;   /* 他の input と同じ */
+  height: 36px;       /* 高さを固定 */
+  line-height: 1.4;
+}
   </style>
 </head>
 <body>
