@@ -85,11 +85,17 @@
       left: 0;
       right: 0;
       background: rgba(243,244,246,0.96);
-      padding: 8px;
+      padding: 4px 8px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      justify-content: center;
+      border-top: 1px solid #e5e7eb;
+    }
+    .buttons-inner {
       display: flex;
       gap: 8px;
       justify-content: center;
-      border-top: 1px solid #e5e7eb;
     }
     button {
       padding: 8px 16px;
@@ -106,9 +112,28 @@
       background: #e5e7eb;
       color: #111827;
     }
+    .small-btn {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
     small {
       font-size: 11px;
       color: #6b7280;
+    }
+    #lastSaved {
+      text-align: center;
+      font-size: 11px;
+      color: #6b7280;
+    }
+    .illness-row {
+      margin-bottom: 4px;
+    }
+    .illness-row .remove-ill-btn {
+      margin-top: 4px;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
     }
   </style>
 </head>
@@ -116,11 +141,26 @@
 <header>わが家のペット・おぼえ書き</header>
 
 <main>
+  <!-- ペット選択 -->
+  <section>
+    <h2>ペットの選択</h2>
+    <div class="row2">
+      <div>
+        <label for="currentPet">ペット</label>
+        <select id="currentPet" name="currentPet"></select>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
+        <button type="button" id="addPetBtn" class="secondary small-btn">＋ 新しいペット</button>
+      </div>
+    </div>
+    <small>ペットを切り替えて、1つのアプリで複数のペットを管理できます。</small>
+  </section>
+
   <!-- 基本情報 -->
   <section>
     <h2>基本情報</h2>
     <div class="grid">
-      <label for="petName">愛称</label>
+      <label for="petName">愛称 <span style="color:#ef4444;font-size:11px;">※必須</span></label>
       <input id="petName" name="petName" type="text" />
 
       <label for="petSex">性別</label>
@@ -136,7 +176,7 @@
       <label for="color">毛色</label>
       <input id="color" name="color" type="text" />
 
-      <label for="birthday">生年月日</label>
+      <label for="birthday">生年月日 <span style="color:#ef4444;font-size:11px;">※必須</span></label>
       <input id="birthday" name="birthday" type="date" />
 
       <label for="adoptDate">飼育年月日</label>
@@ -259,49 +299,12 @@
     </div>
   </section>
 
-  <!-- 病気 -->
+  <!-- 病気（可変行リスト） -->
   <section>
     <h2>病気の記録</h2>
-    <div class="row3">
-      <div>
-        <label for="illDate1">病気になった日①</label>
-        <input id="illDate1" name="illDate1" type="date" />
-      </div>
-      <div>
-        <label for="illName1">病名</label>
-        <input id="illName1" name="illName1" type="text" />
-      </div>
-      <div>
-        <label for="illCost1">費用(円)</label>
-        <input id="illCost1" name="illCost1" type="number" inputmode="decimal" />
-      </div>
-
-      <div>
-        <label for="illDate2">病気になった日②</label>
-        <input id="illDate2" name="illDate2" type="date" />
-      </div>
-      <div>
-        <label for="illName2">病名</label>
-        <input id="illName2" name="illName2" type="text" />
-      </div>
-      <div>
-        <label for="illCost2">費用(円)</label>
-        <input id="illCost2" name="illCost2" type="number" inputmode="decimal" />
-      </div>
-
-      <div>
-        <label for="illDate3">病気になった日③</label>
-        <input id="illDate3" name="illDate3" type="date" />
-      </div>
-      <div>
-        <label for="illName3">病名</label>
-        <input id="illName3" name="illName3" type="text" />
-      </div>
-      <div>
-        <label for="illCost3">費用(円)</label>
-        <input id="illCost3" name="illCost3" type="number" inputmode="decimal" />
-      </div>
-    </div>
+    <div id="illnessList"></div>
+    <button type="button" id="addIllnessBtn" class="secondary small-btn" style="margin-top:6px;">＋ 行を追加</button>
+    <small>※行を追加して、病気ごとに日付・病名・費用を好きなだけ記録できます。</small>
   </section>
 
   <!-- 備考 -->
@@ -312,59 +315,338 @@
 </main>
 
 <div class="buttons">
-  <button class="primary" id="saveBtn">保存</button>
-  <button class="secondary" id="clearBtn">全て消す</button>
+  <div id="lastSaved">まだ保存されていません</div>
+  <div class="buttons-inner">
+    <button class="primary" id="saveBtn">保存</button>
+    <button class="secondary" id="clearBtn">全て消す</button>
+  </div>
 </div>
 
 <script>
-  const STORAGE_KEY = 'pet-memo-v1';
+  // 新バージョンのストレージキー（旧バージョンからのマイグレーションも考慮）
+  const STORAGE_KEY = 'pet-memo-v2';
+  const OLD_STORAGE_KEY = 'pet-memo-v1';
 
-  function getAllInputs() {
-    return document.querySelectorAll('input, textarea, select');
+  // アプリ全体の状態（複数ペット対応）
+  let appState = {
+    activePetId: null,
+    lastSavedAt: null,
+    pets: {}
+  };
+
+  function createNewPet() {
+    const id = 'pet-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+    appState.pets[id] = {
+      fields: {},
+      illnesses: []
+    };
+    appState.activePetId = id;
+    return id;
   }
 
-  function saveData() {
-    const data = {};
-    getAllInputs().forEach(el => {
-      data[el.id] = el.value;
+  // 病気欄の1行を作成
+  function createIllnessRow(illness = {}) {
+    const container = document.getElementById('illnessList');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'row3 illness-row';
+
+    wrapper.innerHTML = `
+      <div>
+        <label>病気になった日</label>
+        <input type="date" data-ill-field="date" />
+      </div>
+      <div>
+        <label>病名</label>
+        <input type="text" data-ill-field="name" />
+      </div>
+      <div>
+        <label>費用(円)</label>
+        <input type="number" inputmode="decimal" data-ill-field="cost" />
+        <button type="button" class="secondary small-btn remove-ill-btn">削除</button>
+      </div>
+    `;
+
+    const inputs = wrapper.querySelectorAll('input');
+    inputs.forEach(input => {
+      const field = input.dataset.illField;
+      if (field === 'date' && illness.date) input.value = illness.date;
+      if (field === 'name' && illness.name) input.value = illness.name;
+      if (field === 'cost' && illness.cost) input.value = illness.cost;
     });
+
+    const removeBtn = wrapper.querySelector('.remove-ill-btn');
+    removeBtn.addEventListener('click', () => {
+      wrapper.remove();
+    });
+
+    container.appendChild(wrapper);
+  }
+
+  function renderIllnessList(illnesses) {
+    const container = document.getElementById('illnessList');
+    container.innerHTML = '';
+    if (illnesses && illnesses.length > 0) {
+      illnesses.forEach(ill => createIllnessRow(ill));
+    } else {
+      // 最低1行は表示しておく
+      createIllnessRow();
+    }
+  }
+
+  function collectIllnessesFromDOM() {
+    const list = [];
+    document.querySelectorAll('.illness-row').forEach(row => {
+      const date = row.querySelector('[data-ill-field="date"]').value;
+      const name = row.querySelector('[data-ill-field="name"]').value;
+      const cost = row.querySelector('[data-ill-field="cost"]').value;
+      // 全部空白の行は保存しない
+      if (date || name || cost) {
+        list.push({ date, name, cost });
+      }
+    });
+    return list;
+  }
+
+  // 病気以外の入力要素を取得（data-ill-field を持たないもの）
+  function getStaticInputs() {
+    return Array.from(document.querySelectorAll('input, textarea, select')).filter(
+      el => !el.dataset.illField && el.id !== 'currentPet'
+    );
+  }
+
+  // 現在フォームの内容を appState のアクティブなペットに反映（ローカルストレージにはまだ書かない）
+  function saveCurrentFormToState() {
+    const petId = appState.activePetId;
+    if (!petId) return;
+
+    const fields = {};
+    getStaticInputs().forEach(el => {
+      if (el.id) {
+        fields[el.id] = el.value;
+      }
+    });
+
+    const illnesses = collectIllnessesFromDOM();
+    appState.pets[petId] = {
+      fields,
+      illnesses
+    };
+  }
+
+  // 指定ペットIDのデータをフォームに反映
+  function fillFormFromPet(petId) {
+    const pet = appState.pets[petId] || { fields: {}, illnesses: [] };
+    const fields = pet.fields || {};
+    getStaticInputs().forEach(el => {
+      el.value = fields[el.id] !== undefined ? fields[el.id] : '';
+    });
+    renderIllnessList(pet.illnesses || []);
+  }
+
+  // ペット選択セレクトの中身を再描画
+  function renderPetSelector() {
+    const select = document.getElementById('currentPet');
+    if (!select) return;
+
+    select.innerHTML = '';
+    const petIds = Object.keys(appState.pets);
+
+    if (petIds.length === 0) {
+      const id = createNewPet();
+      petIds.push(id);
+    }
+
+    petIds.forEach((id, index) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      const fields = appState.pets[id].fields || {};
+      const name = fields.petName || `ペット${index + 1}`;
+      const birthday = fields.birthday || '';
+      opt.textContent = birthday ? `${name}（${birthday}）` : name;
+      select.appendChild(opt);
+    });
+
+    if (!appState.activePetId || !appState.pets[appState.activePetId]) {
+      appState.activePetId = petIds[0];
+    }
+    select.value = appState.activePetId;
+  }
+
+  function formatDateTimeForDisplay(iso) {
+    if (!iso) return 'まだ保存されていません';
+    const d = new Date(iso);
+    const y = d.getFullYear();
+    const m = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    const hh = ('0' + d.getHours()).slice(-2);
+    const mm = ('0' + d.getMinutes()).slice(-2);
+    return `最終保存：${y}/${m}/${day} ${hh}:${mm}`;
+  }
+
+  function updateLastSavedLabel() {
+    const label = document.getElementById('lastSaved');
+    if (!label) return;
+    label.textContent = formatDateTimeForDisplay(appState.lastSavedAt);
+  }
+
+  // ローカルストレージからデータ読み込み（旧フォーマットも考慮）
+  function loadData() {
+    let raw = localStorage.getItem(STORAGE_KEY);
+    let fromOld = false;
+
+    if (!raw) {
+      const oldRaw = localStorage.getItem(OLD_STORAGE_KEY);
+      if (oldRaw) {
+        raw = oldRaw;
+        fromOld = true;
+      }
+    }
+
+    appState = {
+      activePetId: null,
+      lastSavedAt: null,
+      pets: {}
+    };
+
+    if (raw) {
+      try {
+        const saved = JSON.parse(raw);
+
+        if (!fromOld && saved && saved.pets) {
+          // すでに v2 形式
+          appState = saved;
+        } else {
+          // v1 形式 → 1匹分として取り込む
+          const id = createNewPet();
+          const fields = saved || {};
+          const illnesses = [];
+
+          // 旧バージョンの illDate1〜3, illName1〜3, illCost1〜3 を動的リストに変換
+          for (let i = 1; i <= 3; i++) {
+            const date = fields[`illDate${i}`];
+            const name = fields[`illName${i}`];
+            const cost = fields[`illCost${i}`];
+            if (date || name || cost) {
+              illnesses.push({
+                date: date || '',
+                name: name || '',
+                cost: cost || ''
+              });
+            }
+            delete fields[`illDate${i}`];
+            delete fields[`illName${i}`];
+            delete fields[`illCost${i}`];
+          }
+
+          appState.pets[appState.activePetId] = {
+            fields,
+            illnesses
+          };
+        }
+      } catch (e) {
+        console.warn('データ読み込み失敗', e);
+        appState = {
+          activePetId: null,
+          lastSavedAt: null,
+          pets: {}
+        };
+        createNewPet();
+      }
+    } else {
+      // 何もないときは空の1匹を作る
+      createNewPet();
+    }
+
+    renderPetSelector();
+    fillFormFromPet(appState.activePetId);
+    updateLastSavedLabel();
+  }
+
+  // 保存ボタン（バリデーション＋ローカルストレージ保存）
+  function saveData() {
+    const petNameEl = document.getElementById('petName');
+    const birthdayEl = document.getElementById('birthday');
+    const petName = petNameEl.value.trim();
+    const birthday = birthdayEl.value.trim();
+
+    // 必須チェック
+    if (!petName || !birthday) {
+      alert('「愛称」と「生年月日」は必須です。入力してから保存してください。');
+      // 必須項目が分かりやすいようにフォーカス
+      if (!petName) {
+        petNameEl.focus();
+      } else if (!birthday) {
+        birthdayEl.focus();
+      }
+      return;
+    }
+
+    // まず現在フォームを状態に反映
+    saveCurrentFormToState();
+
+    // 保存したタイミングの時刻を記録
+    const now = new Date();
+    appState.lastSavedAt = now.toISOString();
+
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      updateLastSavedLabel();
+      // ペット名や誕生日が変わったかもしれないのでセレクトを更新
+      renderPetSelector();
       alert('保存しました（この端末のブラウザ内）');
     } catch (e) {
+      console.error(e);
       alert('保存に失敗しました（容量オーバーの可能性）');
     }
   }
 
-  function loadData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const data = JSON.parse(raw);
-      getAllInputs().forEach(el => {
-        if (data[el.id] !== undefined) el.value = data[el.id];
-      });
-    } catch (e) {
-      console.warn('データ読み込み失敗', e);
-    }
-  }
-
+  // 全削除ボタン
   function clearData() {
     if (!confirm('全ての入力内容と保存データを削除します。よろしいですか？')) return;
     localStorage.removeItem(STORAGE_KEY);
-    getAllInputs().forEach(el => el.value = '');
+    appState = {
+      activePetId: null,
+      lastSavedAt: null,
+      pets: {}
+    };
+    createNewPet();
+    renderPetSelector();
+    fillFormFromPet(appState.activePetId);
+    updateLastSavedLabel();
   }
-
-  document.getElementById('saveBtn').addEventListener('click', saveData);
-  document.getElementById('clearBtn').addEventListener('click', clearData);
-
-  // 入力するたびに自動保存したければコメント外す
-  // getAllInputs().forEach(el => {
-  //   el.addEventListener('change', saveData);
-  // });
 
   window.addEventListener('load', () => {
     loadData();
+
+    // ペット選択変更でペット切り替え
+    document.getElementById('currentPet').addEventListener('change', (e) => {
+      // 今の入力を状態に反映
+      saveCurrentFormToState();
+      // アクティブペット切り替え
+      appState.activePetId = e.target.value;
+      // 新しいペットの内容をフォームに反映
+      fillFormFromPet(appState.activePetId);
+    });
+
+    // 新しいペット追加
+    document.getElementById('addPetBtn').addEventListener('click', () => {
+      // 今のペットの内容を一度状態に保存
+      saveCurrentFormToState();
+      // 新規ペット作成
+      createNewPet();
+      renderPetSelector();
+      fillFormFromPet(appState.activePetId);
+    });
+
+    // 病気行追加
+    document.getElementById('addIllnessBtn').addEventListener('click', () => {
+      createIllnessRow();
+    });
+
+    // 保存ボタン
+    document.getElementById('saveBtn').addEventListener('click', saveData);
+    // 全削除ボタン
+    document.getElementById('clearBtn').addEventListener('click', clearData);
 
     // PWA用 Service Worker 登録
     if ('serviceWorker' in navigator) {
