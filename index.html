@@ -161,19 +161,19 @@ input[type="date"] {
 <header>わが家の愛犬 健康チェックシート</header>
 
 <main>
-  <!-- ペット選択 -->
+  <!-- 愛犬の選択 -->
   <section>
-    <h2>ペットの選択</h2>
+    <h2>愛犬の選択</h2>
     <div class="row2">
       <div>
-        <label for="currentPet">ペット</label>
+        <label for="currentPet">愛犬</label>
         <select id="currentPet" name="currentPet"></select>
       </div>
       <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
-        <button type="button" id="addPetBtn" class="secondary small-btn">＋ 新しいペット</button>
+        <button type="button" id="addPetBtn" class="secondary small-btn">＋ 新しい愛犬</button>
       </div>
     </div>
-    <small>ペットを切り替えて、1つのアプリで複数のペットを管理できます。</small>
+    <small>愛犬を切り替えて、1つのアプリで複数の愛犬を管理できます。</small>
   </section>
 
   <!-- 基本情報 -->
@@ -526,7 +526,7 @@ input[type="date"] {
       const opt = document.createElement('option');
       opt.value = id;
       const fields = appState.pets[id].fields || {};
-      const name = fields.petName || `ペット${index + 1}`;
+      const name = fields.petName || `愛犬${index + 1}`;
       const birthday = fields.birthday || '';
       opt.textContent = birthday ? `${name}（${birthday}）` : name;
       select.appendChild(opt);
