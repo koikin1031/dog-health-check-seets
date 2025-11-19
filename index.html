@@ -209,22 +209,6 @@
     <small>※PHOTO欄は、このアプリ上に写真を1枚保存する想定です。</small>
   </section>
 
-  <!-- PHOTO（元の3番目の項目） -->
-  <section>
-    <h2>PHOTO</h2>
-    <div>
-      <label for="photoFile">愛犬の写真（1枚）</label>
-      <input id="photoFile" name="photoFile" type="file" accept="image/*" />
-      <!-- 実際に保存するのはこのhiddenに入ったデータURL -->
-      <input id="photoData" name="photoData" type="hidden" />
-      <div id="photoPreviewWrapper" class="photo-preview">
-        <small>写真を選ぶと下にプレビュー表示されます（この端末のブラウザ内だけに保存されます）。</small>
-        <img id="photoPreview" alt="愛犬の写真プレビュー" style="display:none;">
-      </div>
-    </div>
-    <small>※写真はこの端末のブラウザにのみ保存され、サーバーには送信されません。</small>
-  </section>
-
   <!-- ★ 登録した愛犬（元1番目）を PHOTO の直後に移動 ★ -->
   <section>
     <h2>登録した愛犬</h2>
