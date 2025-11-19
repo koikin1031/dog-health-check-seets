@@ -40,39 +40,39 @@
       padding-left: 6px;
     }
     .grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  gap: 6px 8px;
-  align-items: center;
-  font-size: 14px;
-　　}
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: 6px 8px;
+      align-items: center;
+      font-size: 14px;
+    }
     label {
       font-size: 13px;
     }
-  input, textarea, select {
-  width: 100%;
-  min-width: 0;          /* ← これを追加 */
-  box-sizing: border-box;
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  background: #f9fafb;
-　　}
+    input, textarea, select {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      background: #f9fafb;
+    }
     textarea {
       min-height: 60px;
       resize: vertical;
-   }
-  .row2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-　}
-  .row3 {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-　}
+    }
+    .row2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .row3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
     .sub-title {
       font-weight: bold;
       margin: 6px 0 4px;
@@ -142,42 +142,24 @@
       margin-top: 6px;
       display: block;
     }
-input[type="date"] {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-
-  /* 見た目を他の入力と完全に揃えるための指定 */
-  -webkit-appearance: none;
-  appearance: none;
-  padding: 6px 8px;   /* 他の input と同じ */
-  height: 32px;       /* 高さを固定 */
-  line-height: 1.4;
-}
+    input[type="date"] {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+      padding: 6px 8px;
+      height: 32px;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
 <header>わが家の愛犬 健康チェックシート</header>
 
 <main>
-  <!-- 愛犬の選択 → 登録した愛犬 -->
-  <section>
-    <h2>登録した愛犬</h2>
-    <div class="row2">
-      <div>
-        <!-- ラベル「愛犬」を削除してセレクトだけ表示 -->
-        <select id="currentPet" name="currentPet"></select>
-      </div>
-      <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
-        <!-- ＋ 新しい愛犬 → ＋ 追加 -->
-        <button type="button" id="addPetBtn" class="secondary small-btn">＋ 追加</button>
-      </div>
-    </div>
-    <!-- 説明文「愛犬を切り替えて〜」は削除 -->
-  </section>
-
-  <!-- 基本情報 -->
+  <!-- 基本情報（※順番を先頭に） -->
   <section>
     <h2>基本情報</h2>
     <div class="grid">
@@ -227,7 +209,7 @@ input[type="date"] {
     <small>※PHOTO欄は、このアプリ上に写真を1枚保存する想定です。</small>
   </section>
 
-  <!-- PHOTO -->
+  <!-- PHOTO（元の3番目の項目） -->
   <section>
     <h2>PHOTO</h2>
     <div>
@@ -241,6 +223,22 @@ input[type="date"] {
       </div>
     </div>
     <small>※写真はこの端末のブラウザにのみ保存され、サーバーには送信されません。</small>
+  </section>
+
+  <!-- ★ 登録した愛犬（元1番目）を PHOTO の直後に移動 ★ -->
+  <section>
+    <h2>登録した愛犬</h2>
+    <div class="row2">
+      <div>
+        <!-- ラベル「愛犬」を削除してセレクトだけ表示 -->
+        <select id="currentPet" name="currentPet"></select>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
+        <!-- ＋ 新しい愛犬 → ＋ 追加 -->
+        <button type="button" id="addPetBtn" class="secondary small-btn">＋ 追加</button>
+      </div>
+    </div>
+    <!-- 説明文「愛犬を切り替えて〜」は削除 -->
   </section>
 
   <!-- ワクチン -->
@@ -360,11 +358,9 @@ input[type="date"] {
 </div>
 
 <script>
-  // 新バージョンのストレージキー（旧バージョンからのマイグレーションも考慮）
   const STORAGE_KEY = 'pet-memo-v2';
   const OLD_STORAGE_KEY = 'pet-memo-v1';
 
-  // アプリ全体の状態（複数ペット対応）
   let appState = {
     activePetId: null,
     lastSavedAt: null,
@@ -381,7 +377,6 @@ input[type="date"] {
     return id;
   }
 
-  // 病気欄の1行を作成（病気になった日＋治った日）
   function createIllnessRow(illness = {}) {
     const container = document.getElementById('illnessList');
     const wrapper = document.createElement('div');
@@ -412,7 +407,7 @@ input[type="date"] {
       const field = input.dataset.illField;
       if (field === 'startDate') {
         if (illness.startDate) input.value = illness.startDate;
-        else if (illness.date) input.value = illness.date; // 旧データ互換
+        else if (illness.date) input.value = illness.date;
       }
       if (field === 'endDate' && illness.endDate) input.value = illness.endDate;
       if (field === 'name' && illness.name) input.value = illness.name;
@@ -433,7 +428,6 @@ input[type="date"] {
     if (illnesses && illnesses.length > 0) {
       illnesses.forEach(ill => createIllnessRow(ill));
     } else {
-      // 最低1行は表示しておく
       createIllnessRow();
     }
   }
@@ -451,7 +445,6 @@ input[type="date"] {
       const name = nameEl ? nameEl.value : '';
       const cost = costEl ? costEl.value : '';
 
-      // 全部空白の行は保存しない
       if (startDate || endDate || name || cost) {
         list.push({ startDate, endDate, name, cost });
       }
@@ -459,14 +452,12 @@ input[type="date"] {
     return list;
   }
 
-  // 病気以外の入力要素を取得（data-ill-field を持たないもの）
   function getStaticInputs() {
     return Array.from(document.querySelectorAll('input, textarea, select')).filter(
       el => !el.dataset.illField && el.id !== 'currentPet' && el.id !== 'photoFile'
     );
   }
 
-  // PHOTOプレビュー更新（hiddenのphotoDataから反映）
   function updatePhotoPreviewFromHidden() {
     const data = document.getElementById('photoData')?.value || '';
     const img = document.getElementById('photoPreview');
@@ -480,7 +471,6 @@ input[type="date"] {
     }
   }
 
-  // 現在フォームの内容を appState のアクティブなペットに反映（ローカルストレージにはまだ書かない）
   function saveCurrentFormToState() {
     const petId = appState.activePetId;
     if (!petId) return;
@@ -499,7 +489,6 @@ input[type="date"] {
     };
   }
 
-  // 指定ペットIDのデータをフォームに反映
   function fillFormFromPet(petId) {
     const pet = appState.pets[petId] || { fields: {}, illnesses: [] };
     const fields = pet.fields || {};
@@ -510,7 +499,6 @@ input[type="date"] {
     updatePhotoPreviewFromHidden();
   }
 
-  // ペット選択セレクトの中身を再描画
   function renderPetSelector() {
     const select = document.getElementById('currentPet');
     if (!select) return;
@@ -527,7 +515,6 @@ input[type="date"] {
       const opt = document.createElement('option');
       opt.value = id;
       const fields = appState.pets[id].fields || {};
-      // デフォルト表示：愛犬1 → 1頭目
       const name = fields.petName || `${index + 1}頭目`;
       const birthday = fields.birthday || '';
       opt.textContent = birthday ? `${name}（${birthday}）` : name;
@@ -557,7 +544,6 @@ input[type="date"] {
     label.textContent = formatDateTimeForDisplay(appState.lastSavedAt);
   }
 
-  // ローカルストレージからデータ読み込み（旧フォーマットも考慮）
   function loadData() {
     let raw = localStorage.getItem(STORAGE_KEY);
     let fromOld = false;
@@ -581,15 +567,12 @@ input[type="date"] {
         const saved = JSON.parse(raw);
 
         if (!fromOld && saved && saved.pets) {
-          // すでに v2 形式
           appState = saved;
         } else {
-          // v1 形式 → 1匹分として取り込む
           const id = createNewPet();
           const fields = saved || {};
           const illnesses = [];
 
-          // 旧バージョンの illDate1〜3, illName1〜3, illCost1〜3 を動的リストに変換
           for (let i = 1; i <= 3; i++) {
             const date = fields[`illDate${i}`];
             const name = fields[`illName${i}`];
@@ -622,7 +605,6 @@ input[type="date"] {
         createNewPet();
       }
     } else {
-      // 何もないときは空の1匹を作る
       createNewPet();
     }
 
@@ -631,17 +613,14 @@ input[type="date"] {
     updateLastSavedLabel();
   }
 
-  // 保存ボタン（バリデーション＋ローカルストレージ保存）
   function saveData() {
     const petNameEl = document.getElementById('petName');
     const birthdayEl = document.getElementById('birthday');
     const petName = petNameEl.value.trim();
     const birthday = birthdayEl.value.trim();
 
-    // 必須チェック
     if (!petName || !birthday) {
       alert('「愛称」と「生年月日」は必須です。入力してから保存してください。');
-      // 必須項目が分かりやすいようにフォーカス
       if (!petName) {
         petNameEl.focus();
       } else if (!birthday) {
@@ -650,17 +629,14 @@ input[type="date"] {
       return;
     }
 
-    // まず現在フォームを状態に反映
     saveCurrentFormToState();
 
-    // 保存したタイミングの時刻を記録
     const now = new Date();
     appState.lastSavedAt = now.toISOString();
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
       updateLastSavedLabel();
-      // ペット名や誕生日が変わったかもしれないのでセレクトを更新
       renderPetSelector();
       alert('保存しました（この端末のブラウザ内）');
     } catch (e) {
@@ -669,7 +645,6 @@ input[type="date"] {
     }
   }
 
-  // 全削除ボタン
   function clearData() {
     if (!confirm('全ての入力内容と保存データを削除します。よろしいですか？')) return;
     localStorage.removeItem(STORAGE_KEY);
@@ -684,7 +659,6 @@ input[type="date"] {
     updateLastSavedLabel();
   }
 
-  // PHOTOファイル選択時の処理
   function handlePhotoChange(e) {
     const file = e.target.files && e.target.files[0];
     const hidden = document.getElementById('photoData');
@@ -713,43 +687,31 @@ input[type="date"] {
   window.addEventListener('load', () => {
     loadData();
 
-    // ペット選択変更でペット切り替え
     document.getElementById('currentPet').addEventListener('change', (e) => {
-      // 今の入力を状態に反映
       saveCurrentFormToState();
-      // アクティブペット切り替え
       appState.activePetId = e.target.value;
-      // 新しいペットの内容をフォームに反映
       fillFormFromPet(appState.activePetId);
     });
 
-    // 新しいペット追加
     document.getElementById('addPetBtn').addEventListener('click', () => {
-      // 今のペットの内容を一度状態に保存
       saveCurrentFormToState();
-      // 新規ペット作成
       createNewPet();
       renderPetSelector();
       fillFormFromPet(appState.activePetId);
     });
 
-    // 病気行追加
     document.getElementById('addIllnessBtn').addEventListener('click', () => {
       createIllnessRow();
     });
 
-    // 保存ボタン
     document.getElementById('saveBtn').addEventListener('click', saveData);
-    // 全削除ボタン
     document.getElementById('clearBtn').addEventListener('click', clearData);
 
-    // PHOTOファイル入力
     const photoInput = document.getElementById('photoFile');
     if (photoInput) {
       photoInput.addEventListener('change', handlePhotoChange);
     }
 
-    // PWA用 Service Worker 登録
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(console.error);
     }
