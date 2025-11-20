@@ -179,8 +179,15 @@
       <label for="color">毛色</label>
       <input id="color" name="color" type="text" />
 
-      <label for="birthday">生年月日 <span style="color:#ef4444;font-size:11px;">※必須</span></label>
-      <input id="birthday" name="birthday" type="date" />
+      <!-- ★ 生年月日を必須から外し、「不明」チェックを追加 ★ -->
+      <label for="birthday">生年月日</label>
+      <div class="row2">
+        <input id="birthday" name="birthday" type="date" />
+        <label for="birthdayUnknown" style="font-size:12px;display:flex;align-items:center;gap:4px;">
+          <input id="birthdayUnknown" name="birthdayUnknown" type="checkbox" />
+          不明
+        </label>
+      </div>
 
       <label for="adoptDate">飼育年月日</label>
       <input id="adoptDate" name="adoptDate" type="date" />
@@ -208,20 +215,17 @@
     </div>
   </section>
 
-  <!-- ★ 登録した愛犬（元1番目）を PHOTO の直後に移動 ★ -->
+  <!-- 登録した愛犬 -->
   <section>
     <h2>登録した愛犬</h2>
     <div class="row2">
       <div>
-        <!-- ラベル「愛犬」を削除してセレクトだけ表示 -->
         <select id="currentPet" name="currentPet"></select>
       </div>
       <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
-        <!-- ＋ 新しい愛犬 → ＋ 追加 -->
         <button type="button" id="addPetBtn" class="secondary small-btn">＋ 追加</button>
       </div>
     </div>
-    <!-- 説明文「愛犬を切り替えて〜」は削除 -->
   </section>
 
   <!-- ワクチン -->
@@ -435,6 +439,22 @@
     return list;
   }
 
+  // ★ 生年月日「不明」チェックに応じてUIを更新する関数
+  function updateBirthdayUnknownUI() {
+    const birthdayInput = document.getElementById('birthday');
+    const unknownCheckbox = document.getElementById('birthdayUnknown');
+    if (!birthdayInput || !unknownCheckbox) return;
+
+    if (unknownCheckbox.checked) {
+      birthdayInput.value = '';
+      birthdayInput.disabled = true;
+      birthdayInput.style.background = '#e5e7eb';
+    } else {
+      birthdayInput.disabled = false;
+      birthdayInput.style.background = '';
+    }
+  }
+
   function getStaticInputs() {
     return Array.from(document.querySelectorAll('input, textarea, select')).filter(
       el => !el.dataset.illField && el.id !== 'currentPet' && el.id !== 'photoFile'
@@ -460,7 +480,10 @@
 
     const fields = {};
     getStaticInputs().forEach(el => {
-      if (el.id) {
+      if (!el.id) return;
+      if (el.type === 'checkbox') {
+        fields[el.id] = el.checked;
+      } else {
         fields[el.id] = el.value;
       }
     });
@@ -476,10 +499,16 @@
     const pet = appState.pets[petId] || { fields: {}, illnesses: [] };
     const fields = pet.fields || {};
     getStaticInputs().forEach(el => {
-      el.value = fields[el.id] !== undefined ? fields[el.id] : '';
+      if (!el.id) return;
+      if (el.type === 'checkbox') {
+        el.checked = !!fields[el.id];
+      } else {
+        el.value = fields[el.id] !== undefined ? fields[el.id] : '';
+      }
     });
     renderIllnessList(pet.illnesses || []);
     updatePhotoPreviewFromHidden();
+    updateBirthdayUnknownUI();
   }
 
   function renderPetSelector() {
@@ -500,7 +529,15 @@
       const fields = appState.pets[id].fields || {};
       const name = fields.petName || `${index + 1}頭目`;
       const birthday = fields.birthday || '';
-      opt.textContent = birthday ? `${name}（${birthday}）` : name;
+      const birthdayUnknown = fields.birthdayUnknown;
+
+      if (birthdayUnknown) {
+        opt.textContent = `${name}（生年月日：不明）`;
+      } else if (birthday) {
+        opt.textContent = `${name}（${birthday}）`;
+      } else {
+        opt.textContent = name;
+      }
       select.appendChild(opt);
     });
 
@@ -598,17 +635,12 @@
 
   function saveData() {
     const petNameEl = document.getElementById('petName');
-    const birthdayEl = document.getElementById('birthday');
     const petName = petNameEl.value.trim();
-    const birthday = birthdayEl.value.trim();
 
-    if (!petName || !birthday) {
-      alert('「愛称」と「生年月日」は必須です。入力してから保存してください。');
-      if (!petName) {
-        petNameEl.focus();
-      } else if (!birthday) {
-        birthdayEl.focus();
-      }
+    // ★ 生年月日は必須から外し、「愛称」のみ必須に変更
+    if (!petName) {
+      alert('「愛称」は必須です。入力してから保存してください。');
+      petNameEl.focus();
       return;
     }
 
@@ -693,6 +725,12 @@
     const photoInput = document.getElementById('photoFile');
     if (photoInput) {
       photoInput.addEventListener('change', handlePhotoChange);
+    }
+
+    const birthdayUnknownEl = document.getElementById('birthdayUnknown');
+    if (birthdayUnknownEl) {
+      birthdayUnknownEl.addEventListener('change', updateBirthdayUnknownUI);
+      updateBirthdayUnknownUI();
     }
 
     if ('serviceWorker' in navigator) {
