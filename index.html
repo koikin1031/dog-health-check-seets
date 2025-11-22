@@ -159,21 +159,22 @@
     }
     .illness-row,
     .weight-row {
-      margin-bottom: 4px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 8px;
     }
-    .illness-row .remove-ill-btn,
-    .weight-row .remove-ill-btn {
-      margin-top: 4px;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 999px;
+    .illness-row:last-child,
+    .weight-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
     }
-    .photo-preview img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-top: 6px;
-      display: block;
+    
+    .remove-ill-btn {
+      /* ボタン位置調整用 */
+      white-space: nowrap;
     }
+
     input[type="date"] {
       -webkit-appearance: none;
       appearance: none;
@@ -198,6 +199,22 @@
     }
     .weight-row-grid .memo-cell {
       grid-column: 1 / -1;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* 病気の記録の行レイアウト（新設） */
+    .illness-row-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .illness-row-grid .memo-row {
+      grid-column: 1 / -1; /* 3列分またぐ */
+      display: flex;
+      gap: 6px;
+      align-items: flex-end;
     }
   </style>
 </head>
@@ -205,7 +222,6 @@
 <header>わが家の愛犬 健康チェックシート</header>
 
 <main>
-  <!-- 基本情報 -->
   <section>
     <h2>基本情報</h2>
     <div class="grid">
@@ -225,7 +241,6 @@
       <label for="color">毛色</label>
       <input id="color" name="color" type="text" />
 
-      <!-- 生年月日＋不明（専用レイアウト） -->
       <label for="birthday">生年月日</label>
       <div class="birthday-row">
         <input id="birthday" name="birthday" type="date" />
@@ -239,8 +254,6 @@
 
       <label for="adoptDate">愛犬を迎えた日</label>
       <input id="adoptDate" name="adoptDate" type="date" />
-
-      <!-- ここから下の「体高・体長・体重」は削除済み -->
 
       <label for="shop">ペットショップ／元の飼主名</label>
       <input id="shop" name="shop" type="text" />
@@ -256,7 +269,15 @@
     </div>
   </section>
 
-  <!-- 登録した愛犬 -->
+  <section>
+    <h2>体重・体高・体長の記録</h2>
+    <div id="weightList"></div>
+    <button type="button" id="addWeightBtn" class="secondary small-btn" style="margin-top:6px;">
+      ＋ 行を追加
+    </button>
+    <small>※「日付」「体重(kg)」「体高(cm)」「体長(cm)」とメモを記録できます。</small>
+  </section>
+
   <section>
     <h2>登録した愛犬</h2>
     <div class="row2">
@@ -270,7 +291,6 @@
     </div>
   </section>
 
-  <!-- ワクチン -->
   <section>
     <h2>ジステンバー・ワクチン接種日</h2>
     <div class="sub-title">ワクチン</div>
@@ -298,7 +318,6 @@
     </div>
   </section>
 
-  <!-- フィラリア検査 -->
   <section>
     <h2>フィラリア検査</h2>
     <div class="row3">
@@ -330,7 +349,6 @@
     </div>
   </section>
 
-  <!-- 検便・駆虫 -->
   <section>
     <h2>検便・駆虫</h2>
     <div class="sub-title">検便</div>
@@ -363,25 +381,13 @@
     </div>
   </section>
 
-  <!-- 病気の記録 -->
   <section>
     <h2>病気の記録</h2>
     <div id="illnessList"></div>
     <button type="button" id="addIllnessBtn" class="secondary small-btn" style="margin-top:6px;">＋ 行を追加</button>
-    <small>※行を追加して、病気ごとに「病気になった日」「治った日」「病名」「費用」を好きなだけ記録できます。</small>
+    <small>※行を追加して、「病気になった日・治った日」「病名」「費用」「メモ」を記録できます。</small>
   </section>
 
-  <!-- 体重・体高・体長の記録 -->
-  <section>
-    <h2>体重・体高・体長の記録</h2>
-    <div id="weightList"></div>
-    <button type="button" id="addWeightBtn" class="secondary small-btn" style="margin-top:6px;">
-      ＋ 行を追加
-    </button>
-    <small>※「日付」「体重(kg)」「体高(cm)」「体長(cm)」とメモを記録できます。</small>
-  </section>
-
-  <!-- 備考欄 -->
   <section>
     <h2>備考欄</h2>
     <textarea id="memo" name="memo" placeholder="気づいたこと・注意点など"></textarea>
@@ -416,13 +422,14 @@
     return id;
   }
 
+  // 病気の記録行を作成（メモ欄を追加してレイアウト変更）
   function createIllnessRow(illness = {}) {
     const container = document.getElementById('illnessList');
     const wrapper = document.createElement('div');
     wrapper.className = 'illness-row';
 
     wrapper.innerHTML = `
-      <div class="row3">
+      <div class="illness-row-grid">
         <div>
           <label>病気になった日</label>
           <input type="date" data-ill-field="startDate" />
@@ -436,6 +443,12 @@
         <div>
           <label>費用(円)</label>
           <input type="number" inputmode="decimal" data-ill-field="cost" />
+        </div>
+        <div class="memo-row">
+          <div style="flex-grow:1;">
+            <label>メモ</label>
+            <input type="text" data-ill-field="memo" placeholder="症状や処方薬など" />
+          </div>
           <button type="button" class="secondary small-btn remove-ill-btn">削除</button>
         </div>
       </div>
@@ -446,11 +459,12 @@
       const field = input.dataset.illField;
       if (field === 'startDate') {
         if (illness.startDate) input.value = illness.startDate;
-        else if (illness.date) input.value = illness.date;
+        else if (illness.date) input.value = illness.date; // 旧データ互換
       }
       if (field === 'endDate' && illness.endDate) input.value = illness.endDate;
       if (field === 'name' && illness.name) input.value = illness.name;
       if (field === 'cost' && illness.cost) input.value = illness.cost;
+      if (field === 'memo' && illness.memo) input.value = illness.memo;
     });
 
     const removeBtn = wrapper.querySelector('.remove-ill-btn');
@@ -478,14 +492,16 @@
       const endDateEl = row.querySelector('[data-ill-field="endDate"]');
       const nameEl = row.querySelector('[data-ill-field="name"]');
       const costEl = row.querySelector('[data-ill-field="cost"]');
+      const memoEl = row.querySelector('[data-ill-field="memo"]');
 
       const startDate = startDateEl ? startDateEl.value : '';
       const endDate = endDateEl ? endDateEl.value : '';
       const name = nameEl ? nameEl.value : '';
       const cost = costEl ? costEl.value : '';
+      const memo = memoEl ? memoEl.value : '';
 
-      if (startDate || endDate || name || cost) {
-        list.push({ startDate, endDate, name, cost });
+      if (startDate || endDate || name || cost || memo) {
+        list.push({ startDate, endDate, name, cost, memo });
       }
     });
     return list;
@@ -516,8 +532,10 @@
           <input type="number" step="0.1" inputmode="decimal" data-weight-field="length" />
         </div>
         <div class="memo-cell">
-          <label>メモ</label>
-          <input type="text" data-weight-field="memo" />
+          <div style="flex-grow:1;">
+            <label>メモ</label>
+            <input type="text" data-weight-field="memo" />
+          </div>
           <button type="button" class="secondary small-btn remove-ill-btn">削除</button>
         </div>
       </div>
@@ -529,8 +547,8 @@
     const lengthEl  = wrapper.querySelector('[data-weight-field="length"]');
     const memoEl    = wrapper.querySelector('[data-weight-field="memo"]');
 
-    if (weight.date)   dateEl.value   = weight.date;
-    // 旧データ互換：value があればそれを weight として扱う
+    if (weight.date)   dateEl.value    = weight.date;
+    // 旧データ互換
     if (weight.weight !== undefined && weight.weight !== null) {
       weightEl.value = weight.weight;
     } else if (weight.value !== undefined && weight.value !== null) {
@@ -542,7 +560,7 @@
     if (weight.length !== undefined && weight.length !== null) {
       lengthEl.value = weight.length;
     }
-    if (weight.memo)   memoEl.value   = weight.memo;
+    if (weight.memo)   memoEl.value    = weight.memo;
 
     const removeBtn = wrapper.querySelector('.remove-ill-btn');
     removeBtn.addEventListener('click', () => {
@@ -602,21 +620,8 @@
 
   function getStaticInputs() {
     return Array.from(document.querySelectorAll('input, textarea, select')).filter(
-      el => !el.dataset.illField && el.id !== 'currentPet' && el.id !== 'photoFile'
+      el => !el.dataset.illField && !el.dataset.weightField && el.id !== 'currentPet'
     );
-  }
-
-  function updatePhotoPreviewFromHidden() {
-    const data = document.getElementById('photoData')?.value || '';
-    const img = document.getElementById('photoPreview');
-    if (!img) return;
-    if (data) {
-      img.src = data;
-      img.style.display = 'block';
-    } else {
-      img.src = '';
-      img.style.display = 'none';
-    }
   }
 
   function saveCurrentFormToState() {
@@ -656,7 +661,6 @@
     });
     renderIllnessList(pet.illnesses || []);
     renderWeightList(pet.weights || []);
-    updatePhotoPreviewFromHidden();
     updateBirthdayUnknownUI();
   }
 
@@ -767,7 +771,8 @@
                 startDate: date || '',
                 endDate: '',
                 name: name || '',
-                cost: cost || ''
+                cost: cost || '',
+                memo: ''
               });
             }
             delete fields[`illDate${i}`];
@@ -823,31 +828,6 @@
       console.error(e);
       alert('保存に失敗しました（容量オーバーの可能性）');
     }
-  }
-
-  function handlePhotoChange(e) {
-    const file = e.target.files && e.target.files[0];
-    const hidden = document.getElementById('photoData');
-    if (!hidden) return;
-
-    if (!file) {
-      hidden.value = '';
-      updatePhotoPreviewFromHidden();
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      alert('画像ファイルを選択してください。');
-      e.target.value = '';
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      hidden.value = reader.result || '';
-      updatePhotoPreviewFromHidden();
-    };
-    reader.readAsDataURL(file);
   }
 
   function deleteCurrentPet() {
@@ -920,11 +900,6 @@
 
     document.getElementById('saveBtn').addEventListener('click', saveData);
 
-    const photoInput = document.getElementById('photoFile');
-    if (photoInput) {
-      photoInput.addEventListener('change', handlePhotoChange);
-    }
-
     const birthdayUnknownEl = document.getElementById('birthdayUnknown');
     if (birthdayUnknownEl) {
       birthdayUnknownEl.addEventListener('change', updateBirthdayUnknownUI);
@@ -938,4 +913,3 @@
 </script>
 </body>
 </html>
-
