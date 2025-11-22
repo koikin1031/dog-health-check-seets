@@ -185,15 +185,15 @@
 
       <!-- ★ 生年月日を必須から外し、「不明」チェックを追加 ★ -->
       <label for="birthday">生年月日</label>
-      <div class="row2">
-        <input id="birthday" name="birthday" type="date" />
-       <label for="birthdayUnknown"
-  style="font-size:12px;display:flex;align-items:center;gap:0;white-space:nowrap;">
-  <input id="birthdayUnknown" name="birthdayUnknown" type="checkbox" />
-  不明
-</label>
-      </div>
-
+<div class="row2">
+  <input id="birthday" name="birthday" type="date" />
+  <label for="birthdayUnknown"
+    style="font-size:12px;display:flex;align-items:center;white-space:nowrap;">
+    <input id="birthdayUnknown" name="birthdayUnknown" type="checkbox"
+      style="margin:0 2px 0 0;padding:0;" />
+    不明
+  </label>
+</div>
       <label for="adoptDate">飼育年月日</label>
       <input id="adoptDate" name="adoptDate" type="date" />
 
