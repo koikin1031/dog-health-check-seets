@@ -157,10 +157,12 @@
       font-size: 11px;
       color: #6b7280;
     }
-    .illness-row {
+    .illness-row,
+    .weight-row {
       margin-bottom: 4px;
     }
-    .illness-row .remove-ill-btn {
+    .illness-row .remove-ill-btn,
+    .weight-row .remove-ill-btn {
       margin-top: 4px;
       font-size: 11px;
       padding: 2px 8px;
@@ -366,6 +368,16 @@
     <small>※行を追加して、病気ごとに「病気になった日」「治った日」「病名」「費用」を好きなだけ記録できます。</small>
   </section>
 
+  <!-- 体重の記録 -->
+  <section>
+    <h2>体重の記録</h2>
+    <div id="weightList"></div>
+    <button type="button" id="addWeightBtn" class="secondary small-btn" style="margin-top:6px;">
+      ＋ 行を追加
+    </button>
+    <small>※「日付」と「その日の体重」を記録できます。必要ならメモもどうぞ。</small>
+  </section>
+
   <!-- 備考欄 -->
   <section>
     <h2>備考欄</h2>
@@ -394,7 +406,8 @@
     const id = 'pet-' + Date.now() + '-' + Math.random().toString(16).slice(2);
     appState.pets[id] = {
       fields: {},
-      illnesses: []
+      illnesses: [],
+      weights: []
     };
     appState.activePetId = id;
     return id;
@@ -475,6 +488,74 @@
     return list;
   }
 
+  // 体重の行
+  function createWeightRow(weight = {}) {
+    const container = document.getElementById('weightList');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'weight-row';
+
+    wrapper.innerHTML = `
+      <div class="row3">
+        <div>
+          <label>日付</label>
+          <input type="date" data-weight-field="date" />
+        </div>
+        <div>
+          <label>体重(kg)</label>
+          <input type="number" step="0.1" inputmode="decimal" data-weight-field="value" />
+        </div>
+        <div>
+          <label>メモ</label>
+          <input type="text" data-weight-field="memo" />
+          <button type="button" class="secondary small-btn remove-ill-btn">削除</button>
+        </div>
+      </div>
+    `;
+
+    const dateEl  = wrapper.querySelector('[data-weight-field="date"]');
+    const valueEl = wrapper.querySelector('[data-weight-field="value"]');
+    const memoEl  = wrapper.querySelector('[data-weight-field="memo"]');
+
+    if (weight.date)  dateEl.value  = weight.date;
+    if (weight.value) valueEl.value = weight.value;
+    if (weight.memo)  memoEl.value  = weight.memo;
+
+    const removeBtn = wrapper.querySelector('.remove-ill-btn');
+    removeBtn.addEventListener('click', () => {
+      wrapper.remove();
+    });
+
+    container.appendChild(wrapper);
+  }
+
+  function renderWeightList(weights) {
+    const container = document.getElementById('weightList');
+    container.innerHTML = '';
+    if (weights && weights.length > 0) {
+      weights.forEach(w => createWeightRow(w));
+    } else {
+      createWeightRow();
+    }
+  }
+
+  function collectWeightsFromDOM() {
+    const list = [];
+    document.querySelectorAll('#weightList .weight-row').forEach(row => {
+      const dateEl  = row.querySelector('[data-weight-field="date"]');
+      const valueEl = row.querySelector('[data-weight-field="value"]');
+      const memoEl  = row.querySelector('[data-weight-field="memo"]');
+
+      const date  = dateEl  ? dateEl.value  : '';
+      const value = valueEl ? valueEl.value : '';
+      const memo  = memoEl  ? memoEl.value  : '';
+
+      if (date || value || memo) {
+        list.push({ date, value, memo });
+      }
+    });
+    return list;
+  }
+
   // 生年月日「不明」チェックに応じてUIを更新
   function updateBirthdayUnknownUI() {
     const birthdayInput = document.getElementById('birthday');
@@ -525,14 +606,17 @@
     });
 
     const illnesses = collectIllnessesFromDOM();
+    const weights   = collectWeightsFromDOM();
+
     appState.pets[petId] = {
       fields,
-      illnesses
+      illnesses,
+      weights
     };
   }
 
   function fillFormFromPet(petId) {
-    const pet = appState.pets[petId] || { fields: {}, illnesses: [] };
+    const pet = appState.pets[petId] || { fields: {}, illnesses: [], weights: [] };
     const fields = pet.fields || {};
     getStaticInputs().forEach(el => {
       if (!el.id) return;
@@ -543,6 +627,7 @@
       }
     });
     renderIllnessList(pet.illnesses || []);
+    renderWeightList(pet.weights || []);
     updatePhotoPreviewFromHidden();
     updateBirthdayUnknownUI();
   }
@@ -632,6 +717,15 @@
 
         if (!fromOld && saved && saved.pets) {
           appState = saved;
+
+          // v1 から v2 へのアップデートで weights がない可能性に備えて補完
+          Object.keys(appState.pets || {}).forEach(id => {
+            const pet = appState.pets[id];
+            if (!pet.weights) pet.weights = [];
+            if (!pet.illnesses) pet.illnesses = [];
+            if (!pet.fields) pet.fields = {};
+          });
+
         } else {
           const id = createNewPet();
           const fields = saved || {};
@@ -656,7 +750,8 @@
 
           appState.pets[appState.activePetId] = {
             fields,
-            illnesses
+            illnesses,
+            weights: []
           };
         }
       } catch (e) {
@@ -735,7 +830,7 @@
     if (!currentId || !appState.pets[currentId]) return;
 
     const ok = confirm(
-      'この愛犬のデータ（病気の記録を含む）を削除します。\n元に戻せません。本当に削除してよろしいですか？'
+      'この愛犬のデータ（病気の記録や体重の記録を含む）を削除します。\n元に戻せません。本当に削除してよろしいですか？'
     );
     if (!ok) return;
 
@@ -790,6 +885,13 @@
     document.getElementById('addIllnessBtn').addEventListener('click', () => {
       createIllnessRow();
     });
+
+    const addWeightBtn = document.getElementById('addWeightBtn');
+    if (addWeightBtn) {
+      addWeightBtn.addEventListener('click', () => {
+        createWeightRow();
+      });
+    }
 
     document.getElementById('saveBtn').addEventListener('click', saveData);
 
