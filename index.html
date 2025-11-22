@@ -153,10 +153,18 @@
       height: 32px;
       line-height: 1.4;
     }
-   input[type="checkbox"] {
-  margin: 0 !important;
-  padding: 0 !important;
-}
+    input[type="checkbox"] {
+      margin: 0;
+      padding: 0;
+    }
+    /* チェックボックスと「不明」をギュッと寄せる用 */
+    .inline-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;          /* ここを増減させると距離を調整できる */
+      font-size: 12px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -183,17 +191,15 @@
       <label for="color">毛色</label>
       <input id="color" name="color" type="text" />
 
-      <!-- ★ 生年月日を必須から外し、「不明」チェックを追加 ★ -->
+      <!-- 生年月日 ＋ 「不明」チェック -->
       <label for="birthday">生年月日</label>
-<div class="row2">
-  <input id="birthday" name="birthday" type="date" />
-
-  <div style="display:flex;align-items:center;white-space:nowrap;">
-    <input id="birthdayUnknown" name="birthdayUnknown" type="checkbox"
-           style="margin:0 2px 0 0;" />
-    <label for="birthdayUnknown" style="font-size:12px;">不明</label>
-  </div>
-</div>
+      <div class="row2">
+        <input id="birthday" name="birthday" type="date" />
+        <label class="inline-checkbox">
+          <input id="birthdayUnknown" name="birthdayUnknown" type="checkbox" />
+          <span>不明</span>
+        </label>
+      </div>
 
       <label for="adoptDate">飼育年月日</label>
       <input id="adoptDate" name="adoptDate" type="date" />
@@ -445,7 +451,7 @@
     return list;
   }
 
-  // ★ 生年月日「不明」チェックに応じてUIを更新する関数
+  // 生年月日「不明」チェックに応じてUIを更新
   function updateBirthdayUnknownUI() {
     const birthdayInput = document.getElementById('birthday');
     const unknownCheckbox = document.getElementById('birthdayUnknown');
@@ -643,7 +649,7 @@
     const petNameEl = document.getElementById('petName');
     const petName = petNameEl.value.trim();
 
-    // ★ 生年月日は必須から外し、「愛称」のみ必須に変更
+    // 生年月日は必須から外し、「愛称」のみ必須
     if (!petName) {
       alert('「愛称」は必須です。入力してから保存してください。');
       petNameEl.focus();
