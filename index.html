@@ -153,8 +153,9 @@
       height: 32px;
       line-height: 1.4;
     }
-    input[type="checkbox"] {
-  margin: 0 2px 0 0; /* 右側2pxだけにして、ほぼピッタリにする */
+   input[type="checkbox"] {
+  margin: 0 !important;
+  padding: 0 !important;
 }
   </style>
 </head>
@@ -187,7 +188,7 @@
       <div class="row2">
         <input id="birthday" name="birthday" type="date" />
        <label for="birthdayUnknown"
-  style="font-size:12px;display:inline-flex;align-items:center;gap:0;white-space:nowrap;">
+  style="font-size:12px;display:flex;align-items:center;gap:0;white-space:nowrap;">
   <input id="birthdayUnknown" name="birthdayUnknown" type="checkbox" />
   不明
 </label>
