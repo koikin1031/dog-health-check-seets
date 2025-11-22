@@ -67,7 +67,6 @@
       font-size: 14px;
       background: #f9fafb;
     }
-
     textarea {
       min-height: 60px;
       resize: vertical;
@@ -91,6 +90,19 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px;
     }
+
+    /* 生年月日だけ専用レイアウト：左を広く、右は細く */
+    .birthday-row {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) auto; /* 3:1 くらいの比率 */
+      gap: 6px;
+      align-items: center;
+    }
+    .birthday-unknown {
+      display: flex;
+      justify-content: flex-end;  /* 右端に寄せる */
+    }
+
     .sub-title {
       font-weight: bold;
       margin: 6px 0 4px;
@@ -167,11 +179,11 @@
       line-height: 1.4;
     }
 
-    /* チェックボックスと「不明」を寄せる */
+    /* チェックボックスと「不明」をほぼくっつける */
     .inline-checkbox {
       display: inline-flex;
       align-items: center;
-      gap: 2px;  /* ここで距離を調整 */
+      gap: 2px;  /* ここを 0〜4px くらいで好みに調整 */
       font-size: 12px;
       white-space: nowrap;
     }
@@ -201,14 +213,16 @@
       <label for="color">毛色</label>
       <input id="color" name="color" type="text" />
 
-      <!-- 生年月日＋不明 -->
+      <!-- 生年月日＋不明（専用レイアウト） -->
       <label for="birthday">生年月日</label>
-      <div class="row2">
+      <div class="birthday-row">
         <input id="birthday" name="birthday" type="date" />
-        <label class="inline-checkbox">
-          <input id="birthdayUnknown" name="birthdayUnknown" type="checkbox" />
-          <span>不明</span>
-        </label>
+        <div class="birthday-unknown">
+          <label class="inline-checkbox">
+            <input id="birthdayUnknown" name="birthdayUnknown" type="checkbox" />
+            <span>不明</span>
+          </label>
+        </div>
       </div>
 
       <label for="adoptDate">飼育年月日</label>
