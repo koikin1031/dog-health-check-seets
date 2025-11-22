@@ -94,13 +94,13 @@
     /* 生年月日だけ専用レイアウト：左を広く、右は細く */
     .birthday-row {
       display: grid;
-      grid-template-columns: minmax(0, 3fr) auto; /* 3:1 くらいの比率 */
+      grid-template-columns: minmax(0, 3fr) auto;
       gap: 6px;
       align-items: center;
     }
     .birthday-unknown {
       display: flex;
-      justify-content: flex-end;  /* 右端に寄せる */
+      justify-content: flex-end;
     }
 
     .sub-title {
@@ -185,9 +185,19 @@
     .inline-checkbox {
       display: inline-flex;
       align-items: center;
-      gap: 2px;  /* ここを 0〜4px くらいで好みに調整 */
+      gap: 2px;
       font-size: 12px;
       white-space: nowrap;
+    }
+
+    /* 体重・体高・体長の行レイアウト */
+    .weight-row-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .weight-row-grid .memo-cell {
+      grid-column: 1 / -1;
     }
   </style>
 </head>
@@ -230,14 +240,7 @@
       <label for="adoptDate">飼育年月日</label>
       <input id="adoptDate" name="adoptDate" type="date" />
 
-      <label for="height">体高(cm)</label>
-      <input id="height" name="height" type="number" step="0.1" inputmode="decimal" />
-
-      <label for="length">体長(cm)</label>
-      <input id="length" name="length" type="number" step="0.1" inputmode="decimal" />
-
-      <label for="weight">体重(kg)</label>
-      <input id="weight" name="weight" type="number" step="0.1" inputmode="decimal" />
+      <!-- ここから下の「体高・体長・体重」は削除済み -->
 
       <label for="shop">ペットショップ／元の飼主名</label>
       <input id="shop" name="shop" type="text" />
@@ -368,14 +371,14 @@
     <small>※行を追加して、病気ごとに「病気になった日」「治った日」「病名」「費用」を好きなだけ記録できます。</small>
   </section>
 
-  <!-- 体重の記録 -->
+  <!-- 体重・体高・体長の記録 -->
   <section>
-    <h2>体重の記録</h2>
+    <h2>体重・体高・体長の記録</h2>
     <div id="weightList"></div>
     <button type="button" id="addWeightBtn" class="secondary small-btn" style="margin-top:6px;">
       ＋ 行を追加
     </button>
-    <small>※「日付」と「その日の体重」を記録できます。必要ならメモもどうぞ。</small>
+    <small>※「日付」「体重(kg)」「体高(cm)」「体長(cm)」とメモを記録できます。</small>
   </section>
 
   <!-- 備考欄 -->
@@ -488,23 +491,31 @@
     return list;
   }
 
-  // 体重の行
+  // 体重・体高・体長の行
   function createWeightRow(weight = {}) {
     const container = document.getElementById('weightList');
     const wrapper = document.createElement('div');
     wrapper.className = 'weight-row';
 
     wrapper.innerHTML = `
-      <div class="row3">
+      <div class="weight-row-grid">
         <div>
           <label>日付</label>
           <input type="date" data-weight-field="date" />
         </div>
         <div>
           <label>体重(kg)</label>
-          <input type="number" step="0.1" inputmode="decimal" data-weight-field="value" />
+          <input type="number" step="0.1" inputmode="decimal" data-weight-field="weight" />
         </div>
         <div>
+          <label>体高(cm)</label>
+          <input type="number" step="0.1" inputmode="decimal" data-weight-field="height" />
+        </div>
+        <div>
+          <label>体長(cm)</label>
+          <input type="number" step="0.1" inputmode="decimal" data-weight-field="length" />
+        </div>
+        <div class="memo-cell">
           <label>メモ</label>
           <input type="text" data-weight-field="memo" />
           <button type="button" class="secondary small-btn remove-ill-btn">削除</button>
@@ -512,13 +523,26 @@
       </div>
     `;
 
-    const dateEl  = wrapper.querySelector('[data-weight-field="date"]');
-    const valueEl = wrapper.querySelector('[data-weight-field="value"]');
-    const memoEl  = wrapper.querySelector('[data-weight-field="memo"]');
+    const dateEl    = wrapper.querySelector('[data-weight-field="date"]');
+    const weightEl  = wrapper.querySelector('[data-weight-field="weight"]');
+    const heightEl  = wrapper.querySelector('[data-weight-field="height"]');
+    const lengthEl  = wrapper.querySelector('[data-weight-field="length"]');
+    const memoEl    = wrapper.querySelector('[data-weight-field="memo"]');
 
-    if (weight.date)  dateEl.value  = weight.date;
-    if (weight.value) valueEl.value = weight.value;
-    if (weight.memo)  memoEl.value  = weight.memo;
+    if (weight.date)   dateEl.value   = weight.date;
+    // 旧データ互換：value があればそれを weight として扱う
+    if (weight.weight !== undefined && weight.weight !== null) {
+      weightEl.value = weight.weight;
+    } else if (weight.value !== undefined && weight.value !== null) {
+      weightEl.value = weight.value;
+    }
+    if (weight.height !== undefined && weight.height !== null) {
+      heightEl.value = weight.height;
+    }
+    if (weight.length !== undefined && weight.length !== null) {
+      lengthEl.value = weight.length;
+    }
+    if (weight.memo)   memoEl.value   = weight.memo;
 
     const removeBtn = wrapper.querySelector('.remove-ill-btn');
     removeBtn.addEventListener('click', () => {
@@ -541,16 +565,20 @@
   function collectWeightsFromDOM() {
     const list = [];
     document.querySelectorAll('#weightList .weight-row').forEach(row => {
-      const dateEl  = row.querySelector('[data-weight-field="date"]');
-      const valueEl = row.querySelector('[data-weight-field="value"]');
-      const memoEl  = row.querySelector('[data-weight-field="memo"]');
+      const dateEl    = row.querySelector('[data-weight-field="date"]');
+      const weightEl  = row.querySelector('[data-weight-field="weight"]');
+      const heightEl  = row.querySelector('[data-weight-field="height"]');
+      const lengthEl  = row.querySelector('[data-weight-field="length"]');
+      const memoEl    = row.querySelector('[data-weight-field="memo"]');
 
-      const date  = dateEl  ? dateEl.value  : '';
-      const value = valueEl ? valueEl.value : '';
-      const memo  = memoEl  ? memoEl.value  : '';
+      const date   = dateEl    ? dateEl.value    : '';
+      const weight = weightEl  ? weightEl.value  : '';
+      const height = heightEl  ? heightEl.value  : '';
+      const length = lengthEl  ? lengthEl.value  : '';
+      const memo   = memoEl    ? memoEl.value    : '';
 
-      if (date || value || memo) {
-        list.push({ date, value, memo });
+      if (date || weight || height || length || memo) {
+        list.push({ date, weight, height, length, memo });
       }
     });
     return list;
@@ -718,7 +746,6 @@
         if (!fromOld && saved && saved.pets) {
           appState = saved;
 
-          // v1 から v2 へのアップデートで weights がない可能性に備えて補完
           Object.keys(appState.pets || {}).forEach(id => {
             const pet = appState.pets[id];
             if (!pet.weights) pet.weights = [];
@@ -835,7 +862,6 @@
     if (!ok) return;
 
     if (petIds.length <= 1) {
-      // 1頭しかない場合は初期状態に戻すイメージ
       appState = {
         activePetId: null,
         lastSavedAt: null,
@@ -843,7 +869,6 @@
       };
       createNewPet();
     } else {
-      // 複数頭いる場合は、この子だけ削除
       delete appState.pets[currentId];
       const remainingIds = Object.keys(appState.pets);
       appState.activePetId = remainingIds[0] || null;
@@ -913,3 +938,4 @@
 </script>
 </body>
 </html>
+
